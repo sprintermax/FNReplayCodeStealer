@@ -14,7 +14,9 @@ Just run `npm install` on Terminal.
 
 # Usage
 ##### **GETTING ISLAND CODES:**
-1 - Run `npm run get_codes` or `node src/codes.js` on Terminal.
+1 - Place your replay files inside the `replays` folder.
+
+2 - Run `npm run get_codes` or `node src/codes.js` on Terminal.
 
 -> On Windows you can just open the `Get Codes.bat` file.
 
