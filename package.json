@@ -1,0 +1,26 @@
+{
+  "name": "replaymmcodestealer",
+  "version": "1.0.0",
+  "description": "Get Matchmaking portal island codes and images from Fortnite replay files",
+  "type": "module",
+  "main": "src/codes.js",
+  "scripts": {
+    "get_codes": "node src/codes.js",
+    "get_images": "node src/images.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sprintermax/FNReplayCodeStealer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sprintermax/FNReplayCodeStealer/issues"
+  },
+  "homepage": "https://github.com/sprintermax/FNReplayCodeStealer#readme",
+  "author": "Sprintermax",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.0.2",
+    "fortnite-replay-parser": "^1.4.3",
+    "node-fetch": "^3.2.10"
+  }
+}
