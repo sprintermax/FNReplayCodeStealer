@@ -15,15 +15,22 @@ Just run `npm install` on Terminal.
 # Usage
 ##### **GETTING ISLAND CODES:**
 1 - Run `npm run get_codes` or `node src/codes.js` on Terminal.
+
 -> On Windows you can just open the `Get Codes.bat` file.
+
 A file called `MapCodes.txt` will be generated.
 
 ##### **GETTING ISLAND IMAGES:**
 *(Make sure to get the island codes first!)*
+
 1 - Get an API Key on https://fortniteapi.io/.
+
 2 - Create an `.env` file and place `API_TOKEN=YOUR_API_TOKEN_HERE`.
+
 3 - Run `npm run get_images` or `node src/images.js` on Terminal.
+
 -> On Windows you can just open the `Get Images.bat` file.
+
 A folder called `images` will be generated with all the island images inside.
 
 # Other
