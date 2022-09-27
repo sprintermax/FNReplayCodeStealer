@@ -10,6 +10,7 @@ NodeJS app that gets matchmaking portal codes and images of the Fortnite replay 
 
 # Installing
 Just run `npm install` on Terminal.
+
 -> On Windows you can just open the `Install Modules.bat` file.
 
 # Usage
