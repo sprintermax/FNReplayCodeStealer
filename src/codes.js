@@ -3,45 +3,37 @@
 import fs from 'fs';
 import replayReader from 'fortnite-replay-parser';
 
-fs.mkdirSync('./replays', { recursive: true });
+import handleEventEmitter from './Exports/handleEventEmitter.js';
+import MatchmakingPortalNetField from './NetFieldExports/MatchmakingPortal.js';
 
 const replayFiles = fs.readdirSync("./replays").filter((i) => i.endsWith('.replay'));
-
 if (replayFiles.length === 0) {
-    console.log("No replay file found.");
-} else {
-    console.log("Reading replay files and extracting matchmaking codes...");
-    let mapCodes = '';
-    let matchmakingPortals = [];
-    for (const replayFile of replayFiles) {
-        const replayBinary = fs.readFileSync(`./replays/${replayFile}`);
-        matchmakingPortals.push(...(await replayReader(replayBinary, {
-            handleEventEmitter: ({ propertyExportEmitter }) => {
-                propertyExportEmitter.on('BP_Creative_MatchmakingPortal.BP_Creative_MatchmakingPortal_C', ({ data, result }) => {
-                    result.mapData.MMPortal.push(data.WellKnownNameCode);
-                });
-            },
-            onlyUseCustomNetFieldExports: true,
-            customNetFieldExports: [
-                {
-                    path: ['/Game/Creative/Devices/MatchmakingPortal/BP_Creative_MatchmakingPortal.BP_Creative_MatchmakingPortal_C'],
-                    exportName: 'MMPortal',
-                    exportGroup: 'mapData',
-                    exportType: 'array',
-                    parseLevel: 1,
-                    properties: {
-                        WellKnownNameCode: {
-                            name: 'WellKnownNameCode',
-                            type: 'DebugObject',
-                            parseType: 'readClass'
-                        }
-                    }
-                }
-            ]
-        })).mapData.MMPortal
-        );
-    }
-    JSON.parse(JSON.stringify(matchmakingPortals)).map((i) => i.string).filter((v, i, a) => a.indexOf(v) === i).forEach((i) => mapCodes += `${i}\n`);
-    fs.writeFileSync('mapCodes.txt', mapCodes);
-    console.log('Done');
+    console.log('No replay files found. Place your replay files inside the "replays" folder');
+    fs.mkdirSync('./replays');
+    process.exit();
 }
+
+console.log("Reading replay files and extracting matchmaking codes...");
+console.time('Done');
+
+let portalCodes = [];
+for (const replayFile of replayFiles) {
+
+    const replayBinary = fs.readFileSync(`./replays/${replayFile}`);
+
+    const replayData = await replayReader(replayBinary, {
+        handleEventEmitter,
+        onlyUseCustomNetFieldExports: true,
+        customNetFieldExports: [
+            MatchmakingPortalNetField
+        ]
+    });
+
+    portalCodes.push(...replayData.NetFieldData.MatchmakingPortals);
+}
+
+portalCodes = portalCodes.filter((v, i, a) => a.indexOf(v) === i);
+console.log(`\nTotal unique codes: ${portalCodes.length}`);
+
+fs.writeFileSync('mapCodes.txt', portalCodes.join('\n'));
+console.timeEnd('Done');

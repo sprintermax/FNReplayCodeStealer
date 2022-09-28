@@ -2,39 +2,42 @@
 
 import fs from 'fs';
 import fetch from 'node-fetch';
-import rl from 'readline';
 import 'dotenv/config';
 
-fs.mkdirSync('./images', { recursive: true });
+const islandCodes = fs.existsSync('./mapCodes.txt') ? fs.readFileSync('./mapCodes.txt').toString().split('\n') : [];
 
-const islandCodes = fs.existsSync('./mapCodes.txt') ? fs.createReadStream('./mapCodes.txt') : false;
-
-if (!islandCodes) console.log("No island code found.");
-else {
-    console.log("Reading island codes and downloading images...");
-    rl.createInterface({
-        input: islandCodes
-    }).on('line', (rawICode) => {
-        const iCode = rawICode.replace(/[?v=]/gi, '');
-        if (iCode) getIsland(iCode);
-    });
+if (islandCodes.length === 0) {
+    console.log("No island codes found.");
+    process.exit();
 }
 
-async function getIsland(iCode) {
-    const req = await fetch(`https://fortniteapi.io/v1/creative/island?code=${iCode}`, {
+if (fs.existsSync('./images')) fs.rmSync('./images', { recursive: true });
+fs.mkdirSync('./images');
+
+console.log('Reading island codes and downloading images...');
+console.log(`${islandCodes.length} island codes found`);
+
+for (const islandCode of islandCodes) {
+    getIsland(islandCode);
+}
+
+async function getIsland(islandCode) {
+    const res = await fetch(`https://fortniteapi.io/v1/creative/island?code=${islandCode.split('?')[0]}`, {
         headers: {
             Authorization: process.env.API_TOKEN
         }
     });
-    if (req.status === 429) {
-        setTimeout(() => {
-            getIsland(iCode);
-        }, 100);
-    } else if (req.ok) {
-        const iData = await req.json();
-        if (iData.island) {
-            const imgLink = iData.island.image || iData.island.promotion_image;
-            fetch(imgLink).then(res => res.body.pipe(fs.createWriteStream(`./images/${iCode}.png`)));
-        } else console.log(`No island data found for "${iCode}"`);
-    } else console.log(`An error ocurred when trying to fetch "${iCode}"`);
+    if (res.status === 429) {
+        console.log(`Ratelimited when getting "${islandCode}" data, trying again...`);
+        setTimeout(() => getIsland(islandCode), 100);
+    } else if (res.ok) {
+        const islandData = await res.json();
+        if (islandData.island) {
+            const islandImage = await fetch(islandData.island.image || islandData.island.promotion_image);
+            if (islandImage) {
+                islandImage.body.pipe(fs.createWriteStream(`./images/${islandCode.replace('?', '_').replace('=', '')}.png`));
+                console.log(`Saving island image for code "${islandCode}"`);
+            } else console.log(`No island image found for code "${islandCode}", skipping`);
+        } else console.log(`No island data found for code "${islandCode}", skipping`);
+    } else console.log(`An error ocurred when trying to get island data for code "${islandCode}", skipping`);
 }
