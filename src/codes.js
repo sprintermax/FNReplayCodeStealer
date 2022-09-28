@@ -9,7 +9,7 @@ import MatchmakingPortalNetField from './NetFieldExports/MatchmakingPortal.js';
 const replayFiles = fs.existsSync('./replays') ? fs.readdirSync("./replays").filter((i) => i.endsWith('.replay')) : [];
 if (replayFiles.length === 0) {
     console.log('No replay files found. Place your replay files inside the "replays" folder');
-    fs.mkdirSync('./replays');
+    if (!fs.existsSync('./replays')) fs.mkdirSync('./replays');
     process.exit();
 }
 
