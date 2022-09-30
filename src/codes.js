@@ -19,17 +19,21 @@ console.time('Done');
 let portalCodes = [];
 for (const replayFile of replayFiles) {
 
-    const replayBinary = fs.readFileSync(`./replays/${replayFile}`);
+    try {
+        const replayBinary = fs.readFileSync(`./replays/${replayFile}`);
 
-    const replayData = await replayReader(replayBinary, {
-        handleEventEmitter,
-        onlyUseCustomNetFieldExports: true,
-        customNetFieldExports: [
-            MatchmakingPortalNetField
-        ]
-    });
+        const replayData = await replayReader(replayBinary, {
+            handleEventEmitter,
+            onlyUseCustomNetFieldExports: true,
+            customNetFieldExports: [
+                MatchmakingPortalNetField
+            ]
+        });
 
-    portalCodes.push(...replayData.NetFieldData.MatchmakingPortals);
+        portalCodes.push(...replayData.NetFieldData.MatchmakingPortals);
+    } catch (err) {
+        console.log(`ERROR: "${replayFile}" - ${err.message}`);
+    }
 }
 
 portalCodes = portalCodes.filter((v, i, a) => a.indexOf(v) === i);
