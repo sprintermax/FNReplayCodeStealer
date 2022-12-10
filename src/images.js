@@ -1,7 +1,7 @@
 "use strict";
 
+import { WritableStream } from "stream/web";
 import fs from "fs";
-import fetch from "node-fetch";
 import "dotenv/config";
 
 const islandCodes = fs.existsSync("./mapCodes.txt")
@@ -65,7 +65,13 @@ async function getIsland(icodeData, retry = 0) {
         if (!icodeData.version) icodeData.version = islandData.island.latestVersion;
         const islandImage = await fetch(islandData.island.image || islandData.island.promotion_image);
         if (islandImage) {
-          islandImage.body.pipe(fs.createWriteStream(`./images/${icodeData.friendlyName}.png`));
+          const imageSavePath = fs.createWriteStream(`./images/${icodeData.friendlyName}.png`);
+          const localWritableStream = new WritableStream({
+            write(chunk) {
+              imageSavePath.write(chunk);
+            },
+          });
+          await islandImage.body.pipeTo(localWritableStream)
           console.log(`Saving island image for code "${icodeData.friendlyName}"`);
         } else console.log(`No island image found for code "${icodeData.friendlyName}", skipping.`);
       } else console.log(`No island data found for code "${icodeData.friendlyName}", skipping.`);
@@ -73,8 +79,8 @@ async function getIsland(icodeData, retry = 0) {
       console.log(`An error ocurred when trying to get island data for code "${icodeData.friendlyName}", skipping.`);
   } catch (e) {
     retry++;
-    if (retry > 3) return console.log(`Max attempts reached when fetching "${icodeData.friendlyName}" data, skipping.`);
-    console.log(`Unexpected error when fetching "${icodeData.friendlyName}" data, trying again (${retry}/3)...`);
+    if (retry > 5) return console.log(`Max attempts reached when fetching "${icodeData.friendlyName}" data, skipping.`);
+    console.log(`Unexpected error when fetching "${icodeData.friendlyName}" data, trying again (${retry}/5)...`);
     setTimeout(() => getIsland(icodeData, retry), 100);
   }
 }

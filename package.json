@@ -20,7 +20,6 @@
   "license": "MIT",
   "dependencies": {
     "dotenv": "^16.0.2",
-    "fortnite-replay-parser": "^1.4.5",
-    "node-fetch": "^3.2.10"
+    "fortnite-replay-parser": "^1.4.5"
   }
 }
