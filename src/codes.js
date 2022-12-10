@@ -6,13 +6,19 @@ import replayReader from "fortnite-replay-parser";
 import handleEventEmitter from "./Exports/handleEventEmitter.js";
 import MatchmakingPortalNetField from "./NetFieldExports/MatchmakingPortal.js";
 
+if (fs.existsSync("./mapCodes.txt")) {
+  if (!fs.existsSync("./previousMapCodes.txt")) fs.renameSync("./mapCodes.txt", "./previousMapCodes.txt");
+  else fs.writeFileSync("previousMapCodes.txt", [
+    ...fs.readFileSync("./previousMapCodes.txt").toString().split("\n"),
+    ...fs.readFileSync("./mapCodes.txt").toString().split("\n")
+  ].filter((v, i, a) => v !== '' && a.indexOf(v) === i).join("\n"));
+}
+
 const replayFiles = fs.existsSync("./replays")
   ? fs.readdirSync("./replays").filter((i) => i.endsWith(".replay"))
   : [];
 if (replayFiles.length === 0) {
-  console.log(
-    'No replay files found. Place your replay files inside the "replays" folder'
-  );
+  console.log('No replay files found. Place your replay files inside the "replays" folder');
   if (!fs.existsSync("./replays")) fs.mkdirSync("./replays");
   process.exit();
 }

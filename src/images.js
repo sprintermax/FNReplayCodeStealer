@@ -13,70 +13,68 @@ if (islandCodes.length === 0) {
   process.exit();
 }
 
-if (fs.existsSync("./images")) fs.rmSync("./images", { recursive: true });
-fs.mkdirSync("./images");
+if (!fs.existsSync("./images")) fs.mkdirSync("./images");
+else {
+  const imageFiles = fs.readdirSync("./images").filter((i) => i.endsWith(".png"));
+  if (imageFiles.length > 0 && !fs.existsSync("./images/previous")) fs.mkdirSync("./images/previous");
+  for (const imageFile of imageFiles) fs.renameSync(`./images/${imageFile}`, `./images/previous/${imageFile}`);
+}
 
 console.log("Reading island codes and downloading images...");
 console.log(`${islandCodes.length} island codes found`);
 
-for (const islandCode of islandCodes) {
-  getIsland(islandCode);
+class normalizedIslandCode {
+  constructor(rawIslandCode) {
+    const [rawCode, firstPart, middlePart, lastPart, version] = rawIslandCode.match(/([0-9]{4})-*([0-9]{4})-*([0-9]{4})\?*[v=]*([0-9]*)/);
+    this.rawCode = rawCode;
+    this.firstPart = firstPart;
+    this.middlePart = middlePart;
+    this.lastPart = lastPart;
+    this.version = version || null;
+  }
+
+  get normalizedCode() {
+    return `${this.firstPart}-${this.middlePart}-${this.lastPart}`
+  }
+
+  get friendlyName() {
+    return `${this.normalizedCode}${!this.version ? '' : 'v' + this.version}`
+  }
 }
 
-async function getIsland(islandCode, retry = 0) {
+for (const rawICode of islandCodes) {
+  if (rawICode.length < 12) continue;
+  getIsland(new normalizedIslandCode(rawICode));
+}
+
+async function getIsland(icodeData, retry = 0) {
   try {
-    const res = await fetch(
-      `https://fortniteapi.io/v1/creative/island?code=${
-        islandCode.split("?")[0]
-      }`,
-      {
-        headers: {
-          Authorization: process.env.API_TOKEN,
-        },
+    const res = await fetch(`https://fortniteapi.io/v1/creative/island?code=${icodeData.normalizedCode}&version=${icodeData.version}`, {
+      headers: {
+        Authorization: process.env.API_TOKEN
       }
-    );
+    });
     if (res.status === 429) {
       retry++;
-      if (retry > 50)
-        return console.log(
-          `Max rate limit tries reached when fetching "${islandCode}" data, skipping.`
-        );
-      console.log(
-        `Ratelimited when fetching "${islandCode}" data, trying again (${retry}/50)...`
-      );
-      setTimeout(() => getIsland(islandCode, retry), 250);
+      if (retry > 50) return console.log(`Max rate limit tries reached when fetching "${icodeData.friendlyName}" data, skipping.`);
+      console.log(`Ratelimited when fetching "${icodeData.friendlyName}" data, trying again (${retry}/50)...`);
+      setTimeout(() => getIsland(icodeData, retry), 250);
     } else if (res.ok) {
       const islandData = await res.json();
       if (islandData.island) {
-        const islandImage = await fetch(
-          islandData.island.image || islandData.island.promotion_image
-        );
+        if (!icodeData.version) icodeData.version = islandData.island.latestVersion;
+        const islandImage = await fetch(islandData.island.image || islandData.island.promotion_image);
         if (islandImage) {
-          islandImage.body.pipe(
-            fs.createWriteStream(
-              `./images/${islandCode.replace("?", "_").replace("=", "")}.png`
-            )
-          );
-          console.log(`Saving island image for code "${islandCode}"`);
-        } else
-          console.log(
-            `No island image found for code "${islandCode}", skipping.`
-          );
-      } else
-        console.log(`No island data found for code "${islandCode}", skipping.`);
+          islandImage.body.pipe(fs.createWriteStream(`./images/${icodeData.friendlyName}.png`));
+          console.log(`Saving island image for code "${icodeData.friendlyName}"`);
+        } else console.log(`No island image found for code "${icodeData.friendlyName}", skipping.`);
+      } else console.log(`No island data found for code "${icodeData.friendlyName}", skipping.`);
     } else
-      console.log(
-        `An error ocurred when trying to get island data for code "${islandCode}", skipping.`
-      );
+      console.log(`An error ocurred when trying to get island data for code "${icodeData.friendlyName}", skipping.`);
   } catch (e) {
     retry++;
-    if (retry > 3)
-      return console.log(
-        `Max attempts reached when fetching "${islandCode}" data, skipping.`
-      );
-    console.log(
-      `Unexpected error when fetching "${islandCode}" data, trying again (${retry}/3)...`
-    );
-    setTimeout(() => getIsland(islandCode, retry), 100);
+    if (retry > 3) return console.log(`Max attempts reached when fetching "${icodeData.friendlyName}" data, skipping.`);
+    console.log(`Unexpected error when fetching "${icodeData.friendlyName}" data, trying again (${retry}/3)...`);
+    setTimeout(() => getIsland(icodeData, retry), 100);
   }
 }

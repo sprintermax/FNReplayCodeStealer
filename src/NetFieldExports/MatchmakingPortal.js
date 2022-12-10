@@ -7,7 +7,7 @@ import replayReader from "fortnite-replay-parser";
  */
 export default {
   path: [
-    "/Game/Creative/Devices/MatchmakingPortal/BP_Creative_MatchmakingPortal.BP_Creative_MatchmakingPortal_C",
+    "/Game/Creative/Devices/MatchmakingPortal/BP_Creative_MatchmakingPortal.BP_Creative_MatchmakingPortal_C"
   ],
   exportName: "MatchmakingPortals",
   exportGroup: "NetFieldData",
@@ -17,7 +17,7 @@ export default {
     WellKnownNameCode: {
       name: "WellKnownNameCode",
       parseFunction: "readString",
-      parseType: "default",
-    },
-  },
+      parseType: "default"
+    }
+  }
 };

@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "Get Matchmaking portal island codes and images from Fortnite replay files",
   "type": "module",
-  "main": "src/codes.js",
   "scripts": {
+    "start": "node src/codes.js && node src/images.js",
     "get_codes": "node src/codes.js",
     "get_images": "node src/images.js"
   },
@@ -20,7 +20,7 @@
   "license": "MIT",
   "dependencies": {
     "dotenv": "^16.0.2",
-    "fortnite-replay-parser": "^1.4.3",
+    "fortnite-replay-parser": "^1.4.5",
     "node-fetch": "^3.2.10"
   }
 }
